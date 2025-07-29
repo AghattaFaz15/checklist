@@ -3,116 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pergaminho Real 📜</title>
+  <title>Pergaminho Real</title>
   <style>
     body {
       margin: 0;
-      background: #f3e5ab;
-      height: 100vh;
+      background: #fdf6e3;
+      font-family: 'Georgia', serif;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-family: 'Georgia', serif;
+      height: 100vh;
     }
 
-    .container {
-      text-align: center;
-    }
-
-    .scroll {
-      width: 320px;
-      height: 100px;
-      background: linear-gradient(#fdf5e6, #f5deb3);
-      border: 4px solid #b8860b;
-      border-radius: 20px;
+    #gif {
+      max-width: 400px;
+      display: none;
+      border-radius: 10px;
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
-      overflow: hidden;
-      position: relative;
-      transition: height 1.5s ease;
-      cursor: pointer;
     }
 
-    .scroll.open {
-      height: 400px;
-    }
-
-    .scroll::before,
-    .scroll::after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 30px;
-      background: #d2b48c;
-      border-top: 2px solid #a0522d;
-      border-bottom: 2px solid #a0522d;
-      left: 0;
-    }
-
-    .scroll::before {
-      top: 0;
-      border-radius: 20px 20px 0 0;
-    }
-
-    .scroll::after {
-      bottom: 0;
-      border-radius: 0 0 20px 20px;
-    }
-
-    .content {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 1.2s ease, transform 1.2s ease;
-      padding: 20px;
-    }
-
-    .scroll.open .content {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .message {
-      margin-top: 40px;
-      font-size: 20px;
-      color: #6b4f2d;
-      font-weight: bold;
-      font-style: italic;
-      text-shadow: 0 1px 1px #fff;
-    }
-
-    .hint {
+    #message {
       margin-top: 20px;
-      font-size: 14px;
-      color: #5c4323;
+      font-size: 22px;
+      font-style: italic;
+      color: #5a3e1b;
+      opacity: 0;
+      transition: opacity 1.2s ease-in-out;
+    }
+
+    #hint {
+      margin-top: 20px;
+      color: #8b6f47;
+      font-size: 16px;
+    }
+
+    #container {
+      text-align: center;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <div class="scroll" id="scroll">
-      <div class="content" id="content">
-        <div class="message" id="msg">Mensagem do Rei para você</div>
-      </div>
-    </div>
-    <p class="hint" id="hint">Clique para desenrolar o pergaminho</p>
+  <div id="container">
+    <img id="gif" src="scroll-parchment.gif" alt="Pergaminho">
+    <div id="message">Mensagem do Rei para você</div>
+    <div id="hint">Clique para desenrolar o pergaminho</div>
   </div>
 
   <script>
-    const scroll = document.getElementById('scroll');
-    const msg = document.getElementById('msg');
-    const hint = document.getElementById('hint');
-    let estado = 0;
+    const gif = document.getElementById("gif");
+    const message = document.getElementById("message");
+    const hint = document.getElementById("hint");
+    const container = document.getElementById("container");
 
-    scroll.addEventListener('click', () => {
-      if (estado === 0) {
-        scroll.classList.add('open');
-        hint.innerText = "Toque novamente para ler a mensagem";
-        estado = 1;
-      } else if (estado === 1) {
-        window.location.href = "segunda.html"; // substitua por qualquer destino
+    let etapa = 0;
+
+    container.addEventListener("click", () => {
+      if (etapa === 0) {
+        gif.style.display = "block";
+        setTimeout(() => {
+          message.style.opacity = 1;
+          hint.innerText = "Clique novamente para abrir a mensagem";
+        }, 2000);
+        etapa = 1;
+      } else if (etapa === 1) {
+        window.location.href = "segunda.html";
       }
     });
   </script>
-
 </body>
 </html>
