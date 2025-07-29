@@ -1,34 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Toque para iniciar</title>
+  <meta charset="UTF-8">
+  <title>Mensagem Real</title>
   <style>
     body {
       margin: 0;
       background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      cursor: pointer;
     }
 
-    img {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 12px;
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
     }
   </style>
 </head>
-<body onclick="irParaVideo()">
-  <img src="imagem-capa.jpg" alt="Clique para iniciar" />
-  
+<body>
+  <video autoplay muted playsinline id="meuVideo">
+    <source src="mensagem.mp4" type="video/mp4">
+    Seu navegador não suporta vídeo HTML5.
+  </video>
+
   <script>
-    function irParaVideo() {
-      window.location.href = "video.html";
-    }
+    const video = document.getElementById("meuVideo");
+    video.onended = () => {
+      window.location.href = "final.html";
+    };
   </script>
 </body>
 </html>
