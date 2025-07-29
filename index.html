@@ -6,37 +6,34 @@
   <style>
     body {
       margin: 0;
-      background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background-color: black;
+      overflow: hidden;
       cursor: pointer;
-      position: relative;
-      font-family: 'Georgia', serif;
     }
 
-    img {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 12px;
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+    #fundo {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
     }
 
     .mensagem {
       position: absolute;
-      color: white;
-      font-size: 32px;
-      text-shadow: 2px 2px 6px #000;
-      text-align: center;
       top: 10%;
+      width: 100%;
+      text-align: center;
+      font-size: 2.5em;
+      color: white;
+      font-family: 'Georgia', serif;
+      text-shadow: 2px 2px 8px black;
+      pointer-events: none;
     }
   </style>
 </head>
 <body onclick="irParaVideo()">
+  <img id="fundo" src="imagem-capa.jpg" alt="Toque na imagem para continuar" />
   <div class="mensagem">Toque na porta do Céu</div>
-  <img src="imagem-capa.jpg" alt="Clique para iniciar" />
-  
+
   <script>
     function irParaVideo() {
       window.location.href = "video.html";
@@ -45,7 +42,3 @@
 </body>
 </html>
 
-    };
-  </script>
-</body>
-</html>
