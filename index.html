@@ -1,46 +1,69 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Envelope Animado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Envelope Realista</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background: linear-gradient(to bottom, #fefefe, #ddd);
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(#f3f3f3, #ccc);
       height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       font-family: 'Segoe UI', sans-serif;
     }
 
-    .envelope-wrapper {
-      perspective: 1000px;
+    .scene {
+      perspective: 1200px;
     }
 
     .envelope {
       position: relative;
-      width: 320px;
+      width: 300px;
       height: 200px;
       background: #fff;
-      border: 2px solid #cfcfcf;
-      border-radius: 8px;
-      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+      border: 2px solid #c0bebe;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      border-radius: 6px;
       overflow: hidden;
+      transform-style: preserve-3d;
       cursor: pointer;
     }
 
-    .envelope .flap {
+    .flap {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100px;
       background: #e53935;
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
       transform-origin: top center;
       transition: transform 1s ease-in-out;
-      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      z-index: 3;
+    }
+
+    .letter {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      background: #fffdfd;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 18px;
+      color: #444;
+      transition: top 1.5s ease-in-out;
       z-index: 2;
     }
 
@@ -48,51 +71,15 @@
       transform: rotateX(-180deg);
     }
 
-    .envelope .letter {
-      position: absolute;
-      top: 100px;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #fdfdfd;
-      color: #444;
-      text-align: center;
-      padding: 40px 20px;
-      box-sizing: border-box;
-      font-size: 18px;
-      z-index: 1;
-      opacity: 0;
-      transition: opacity 1s ease 0.5s;
-    }
-
     .envelope.open .letter {
-      opacity: 1;
-    }
-
-    .envelope::before,
-    .envelope::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      width: 160px;
-      height: 100px;
-      background: #d32f2f;
-      z-index: 0;
-    }
-
-    .envelope::before {
-      left: 0;
-      clip-path: polygon(0 100%, 100% 0, 100% 100%);
-    }
-
-    .envelope::after {
-      right: 0;
-      clip-path: polygon(0 0, 100% 100%, 0 100%);
+      top: 10%;
     }
 
     .click-msg {
+      position: absolute;
+      top: calc(100% + 20px);
+      width: 100%;
       text-align: center;
-      margin-top: 20px;
       font-size: 16px;
       color: #666;
     }
@@ -100,12 +87,15 @@
 </head>
 <body>
 
-  <div class="envelope-wrapper">
+  <div class="scene">
     <div class="envelope" id="envelope">
       <div class="flap"></div>
-      <div class="letter">Mensagem secreta revelada!<br>Redirecionando...</div>
+      <div class="letter">
+        👋 Olá! Esta é a segunda página!<br>
+        Você será redirecionado...
+      </div>
+      <div class="click-msg">Clique para abrir</div>
     </div>
-    <div class="click-msg">Clique no envelope para abrir</div>
   </div>
 
   <script>
@@ -114,9 +104,11 @@
     envelope.addEventListener('click', () => {
       if (!envelope.classList.contains('open')) {
         envelope.classList.add('open');
+
+        // Aguarda animação e redireciona
         setTimeout(() => {
           window.location.href = 'segunda-pagina.html';
-        }, 2500); // tempo da animação + leitura da mensagem
+        }, 3500);
       }
     });
   </script>
