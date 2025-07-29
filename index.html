@@ -7,75 +7,117 @@
   <style>
     body {
       margin: 0;
-      background: #f2f2f2;
+      background: linear-gradient(to bottom, #fefefe, #ddd);
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .envelope-wrapper {
+      perspective: 1000px;
     }
 
     .envelope {
       position: relative;
-      width: 300px;
+      width: 320px;
       height: 200px;
-      background: #c62828;
+      background: #fff;
+      border: 2px solid #cfcfcf;
+      border-radius: 8px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
       cursor: pointer;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-      transition: transform 1s ease-in-out;
     }
 
-    .envelope::before {
-      content: "";
+    .envelope .flap {
       position: absolute;
       top: 0;
       left: 0;
-      width: 0;
-      height: 0;
-      border-left: 150px solid transparent;
-      border-right: 150px solid transparent;
-      border-bottom: 100px solid #e53935;
-      transition: transform 1s ease-in-out;
+      width: 100%;
+      height: 100px;
+      background: #e53935;
       transform-origin: top center;
+      transition: transform 1s ease-in-out;
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
       z-index: 2;
     }
 
-    .envelope.open::before {
-      transform: rotateX(180deg);
+    .envelope.open .flap {
+      transform: rotateX(-180deg);
     }
 
-    .message {
+    .envelope .letter {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 20px;
+      top: 100px;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fdfdfd;
+      color: #444;
+      text-align: center;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      font-size: 18px;
+      z-index: 1;
       opacity: 0;
-      transition: opacity 0.8s ease;
+      transition: opacity 1s ease 0.5s;
     }
 
-    .envelope.open .message {
+    .envelope.open .letter {
       opacity: 1;
+    }
+
+    .envelope::before,
+    .envelope::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      width: 160px;
+      height: 100px;
+      background: #d32f2f;
+      z-index: 0;
+    }
+
+    .envelope::before {
+      left: 0;
+      clip-path: polygon(0 100%, 100% 0, 100% 100%);
+    }
+
+    .envelope::after {
+      right: 0;
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+
+    .click-msg {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 16px;
+      color: #666;
     }
   </style>
 </head>
 <body>
 
-  <div class="envelope" id="envelope">
-    <div class="message">Abrindo...</div>
+  <div class="envelope-wrapper">
+    <div class="envelope" id="envelope">
+      <div class="flap"></div>
+      <div class="letter">Mensagem secreta revelada!<br>Redirecionando...</div>
+    </div>
+    <div class="click-msg">Clique no envelope para abrir</div>
   </div>
 
   <script>
     const envelope = document.getElementById('envelope');
 
     envelope.addEventListener('click', () => {
-      envelope.classList.add('open');
-
-      // Aguarda 2 segundos e redireciona
-      setTimeout(() => {
-        window.location.href = 'segunda-pagina.html';
-      }, 2000);
+      if (!envelope.classList.contains('open')) {
+        envelope.classList.add('open');
+        setTimeout(() => {
+          window.location.href = 'segunda-pagina.html';
+        }, 2500); // tempo da animação + leitura da mensagem
+      }
     });
   </script>
 </body>
