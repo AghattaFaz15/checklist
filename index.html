@@ -2,74 +2,53 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pergaminho Real</title>
+  <title>Toque para Revelar</title>
   <style>
-    body {
+    * {
       margin: 0;
-      background: #fdf6e3;
-      font-family: 'Georgia', serif;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      background: #000;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-    }
-
-    #gif {
-      max-width: 400px;
-      display: none;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-
-    #message {
-      margin-top: 20px;
-      font-size: 22px;
-      font-style: italic;
-      color: #5a3e1b;
-      opacity: 0;
-      transition: opacity 1.2s ease-in-out;
-    }
-
-    #hint {
-      margin-top: 20px;
-      color: #8b6f47;
-      font-size: 16px;
-    }
-
-    #container {
-      text-align: center;
+      transition: opacity 1.5s ease;
       cursor: pointer;
+    }
+
+    .container img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .fade-out {
+      opacity: 0;
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <img id="gif" src="scroll-parchment.gif" alt="Pergaminho">
-    <div id="message">Mensagem do Rei para você</div>
-    <div id="hint">Clique para desenrolar o pergaminho</div>
+  <div class="container" id="tela">
+    <img src="sua-capa.jpg" alt="Capa do convite">
   </div>
 
   <script>
-    const gif = document.getElementById("gif");
-    const message = document.getElementById("message");
-    const hint = document.getElementById("hint");
-    const container = document.getElementById("container");
-
-    let etapa = 0;
-
-    container.addEventListener("click", () => {
-      if (etapa === 0) {
-        gif.style.display = "block";
-        setTimeout(() => {
-          message.style.opacity = 1;
-          hint.innerText = "Clique novamente para abrir a mensagem";
-        }, 2000);
-        etapa = 1;
-      } else if (etapa === 1) {
+    const tela = document.getElementById('tela');
+    tela.addEventListener('click', () => {
+      tela.classList.add('fade-out');
+      setTimeout(() => {
         window.location.href = "segunda.html";
-      }
+      }, 1500); // tempo da transição
     });
   </script>
 </body>
