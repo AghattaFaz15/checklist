@@ -2,43 +2,94 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Toque na porta do Céu</title>
+  <title>Mensagem do Rei</title>
   <style>
-    body {
+    * {
       margin: 0;
-      background-color: black;
-      overflow: hidden;
-      cursor: pointer;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    #fundo {
+    body {
+      background: black;
+      overflow: hidden;
+      font-family: 'Georgia', serif;
+    }
+
+    .tela {
+      position: absolute;
       width: 100vw;
       height: 100vh;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 1;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .escondido {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #inicio img,
+    #final img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
 
     .mensagem {
       position: absolute;
-      top: 10%;
-      width: 100%;
-      text-align: center;
-      font-size: 2.5em;
       color: white;
-      font-family: 'Georgia', serif;
-      text-shadow: 2px 2px 8px black;
-      pointer-events: none;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 6px black;
+      text-align: center;
+    }
+
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
     }
   </style>
 </head>
-<body onclick="irParaVideo()">
-  <img id="fundo" src="imagem-capa.jpg" alt="Toque na imagem para continuar" />
-  <div class="mensagem">Toque na porta do Céu</div>
+<body>
+
+  <div id="inicio" class="tela" onclick="mostrarVideo()">
+    <img src="imagem-capa.jpg" alt="Imagem de capa">
+    <div class="mensagem">Toque na porta do Céu</div>
+  </div>
+
+  <div id="videoContainer" class="tela escondido">
+    <video id="video" autoplay muted playsinline>
+      <source src="mensagem.mp4" type="video/mp4" />
+      Seu navegador não suporta vídeo.
+    </video>
+  </div>
+
+  <div id="final" class="tela escondido">
+    <img src="Aghatta_20250728_225115_0000.png" alt="Mensagem final">
+  </div>
 
   <script>
-    function irParaVideo() {
-      window.location.href = "video.html";
+    function mostrarVideo() {
+      document.getElementById("inicio").classList.add("escondido");
+      document.getElementById("videoContainer").classList.remove("escondido");
+
+      const video = document.getElementById("video");
+      video.play();
+
+      video.onended = () => {
+        document.getElementById("videoContainer").classList.add("escondido");
+        document.getElementById("final").classList.remove("escondido");
+      };
     }
   </script>
+
 </body>
 </html>
+
 
