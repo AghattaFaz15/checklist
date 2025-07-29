@@ -13,12 +13,13 @@
       width: 100vw;
       height: 100vh;
       object-fit: cover;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <video autoplay controls id="meuVideo">
-    <source src="mensagem .mp4" type="video/mp4">
+  <video autoplay muted playsinline id="meuVideo">
+    <source src="mensagem.mp4" type="video/mp4">
     Seu navegador não suporta vídeo HTML5.
   </video>
 
