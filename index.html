@@ -1,104 +1,159 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Mensagem do Rei</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checklist Compartilhada</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      background: black;
-      overflow: hidden;
-      font-family: 'Georgia', serif;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f2f4f8;
+      color: #333;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
     }
 
-    .tela {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: opacity 1s ease-in-out;
-      opacity: 1;
-    }
-
-    .escondido {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    #inicio img,
-    #final img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .mensagem {
-      position: absolute;
-      color: white;
-      font-size: 2.5em;
-      text-shadow: 2px 2px 6px black;
+    h1 {
       text-align: center;
+      color: #1e3d59;
     }
 
-    video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    li input[type="checkbox"] {
+      margin-right: 10px;
+    }
+
+    input[type="text"] {
+      width: 70%;
+      padding: 8px;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #1e3d59;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #35607c;
+    }
+
+    .item-text {
+      flex: 1;
+      margin-left: 10px;
+    }
+
+    .remove-button {
+      margin-left: 10px;
+      background: none;
+      border: none;
+      color: red;
+      cursor: pointer;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-  <div id="inicio" class="tela" onclick="mostrarVideo()">
-    <img src="imagem-capa.jpg" alt="Imagem de capa">
-    <div class="mensagem">Toque na porta do Céu</div>
+  <h1>Checklist Compartilhada</h1>
+
+  <ul id="checklist"></ul>
+
+  <div style="margin-top: 20px;">
+    <input type="text" id="novoItem" placeholder="Digite um novo item..." />
+    <button onclick="adicionarItem()">Adicionar</button>
   </div>
 
-  <div id="videoContainer" class="tela escondido">
-    <video id="video" playsinline muted>
-      <source src="mensagem.mp4" type="video/mp4">
-      Seu navegador não suporta vídeo.
-    </video>
-  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      push,
+      onValue,
+      update,
+      remove
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  <div id="final" class="tela escondido">
-    <img src="Aghatta_20250728_225115_0000.png" alt="Mensagem final">
-  </div>
+    // Configuração do Firebase do seu app
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiL8tFU_tJuFcwEQY4SpKu8RwIqwRWhHY",
+      authDomain: "checklist-aniversario.firebaseapp.com",
+      projectId: "checklist-aniversario",
+      storageBucket: "checklist-aniversario.firebasestorage.app",
+      messagingSenderId: "790039618075",
+      appId: "1:790039618075:web:938c044193d546afabcebe",
+      databaseURL: "https://checklist-aniversario-default-rtdb.firebaseio.com"
+    };
 
-  <script>
-    const video = document.getElementById("video");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const checklistRef = ref(db, 'checklist');
 
-    function mostrarVideo() {
-      document.getElementById("inicio").classList.add("escondido");
-      document.getElementById("videoContainer").classList.remove("escondido");
+    // Adicionar novo item
+    window.adicionarItem = () => {
+      const input = document.getElementById('novoItem');
+      const texto = input.value.trim();
+      if (texto) {
+        push(checklistRef, { texto, marcado: false });
+        input.value = '';
+      }
+    };
 
-      // Aguarda o carregamento e só então reproduz
-      video.load();
-      video.play().catch(err => {
-        console.error("Erro ao iniciar vídeo:", err);
+    // Atualização em tempo real
+    onValue(checklistRef, (snapshot) => {
+      const lista = document.getElementById('checklist');
+      lista.innerHTML = '';
+      snapshot.forEach((child) => {
+        const item = child.val();
+        const key = child.key;
+
+        const li = document.createElement('li');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.marcado;
+        checkbox.onchange = () => {
+          update(ref(db, `checklist/${key}`), { marcado: checkbox.checked });
+        };
+
+        const span = document.createElement('span');
+        span.textContent = item.texto;
+        span.className = 'item-text';
+
+        const btnRemove = document.createElement('button');
+        btnRemove.textContent = '❌';
+        btnRemove.className = 'remove-button';
+        btnRemove.onclick = () => {
+          remove(ref(db, `checklist/${key}`));
+        };
+
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        li.appendChild(btnRemove);
+
+        lista.appendChild(li);
       });
-
-      video.onended = () => {
-        document.getElementById("videoContainer").classList.add("escondido");
-        document.getElementById("final").classList.remove("escondido");
-      };
-    }
+    });
   </script>
 
 </body>
 </html>
-
-
-</body>
-</html>
-
-
