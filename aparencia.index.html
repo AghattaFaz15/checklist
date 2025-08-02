@@ -1,0 +1,139 @@
+<!-- Apenas a parte do <body> foi modificada, o resto permanece igual -->
+
+<body>
+  <h1>Checklist Aniversário</h1>
+  <div class="container">
+
+    <div class="categoria-header">
+      <input id="novaCategoria" placeholder="Nova categoria..." />
+      <button onclick="criarCategoria()">Adicionar Categoria</button>
+    </div>
+
+    <div>
+      <select id="selectCategoria" onchange="carregarItens()">
+        <option disabled selected>Selecione uma categoria</option>
+      </select>
+    </div>
+
+    <div class="item-adder">
+      <input id="novoItem" placeholder="Novo item..." />
+      <button onclick="adicionarItem()">Adicionar Item</button>
+    </div>
+
+    <div id="itensChecklist"></div>
+
+    <hr style="margin: 2rem 0; border-color: #444;">
+
+    <h2 style="color:#D4AF37; font-family:'Dancing Script', cursive;">📦 Itens já adicionados:</h2>
+    <div id="resumoChecklist"></div>
+  </div>
+
+  <!-- Firebase SDK + Script (igual ao anterior, com acréscimo do resumo) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiL8tFU_tJuFcwEQY4SpKu8RwIqwRWhHY",
+      authDomain: "checklist-aniversario.firebaseapp.com",
+      databaseURL: "https://checklist-aniversario-default-rtdb.firebaseio.com",
+      projectId: "checklist-aniversario",
+      storageBucket: "checklist-aniversario.appspot.com",
+      messagingSenderId: "790039618075",
+      appId: "1:790039618075:web:938c044193d546afabcebe"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const categoriasRef = ref(db, 'checklist');
+
+    const selectCategoria = document.getElementById('selectCategoria');
+    const novoItem = document.getElementById('novoItem');
+    const novaCategoria = document.getElementById('novaCategoria');
+    const itensChecklist = document.getElementById('itensChecklist');
+    const resumoChecklist = document.getElementById('resumoChecklist');
+
+    function criarCategoria() {
+      const nome = novaCategoria.value.trim();
+      if (!nome) return;
+      set(ref(db, `checklist/${nome}`), { createdAt: Date.now() });
+      novaCategoria.value = '';
+    }
+
+    function carregarCategorias() {
+      onValue(categoriasRef, snapshot => {
+        selectCategoria.innerHTML = '<option disabled selected>Selecione uma categoria</option>';
+        resumoChecklist.innerHTML = '';
+
+        snapshot.forEach(cat => {
+          const categoria = cat.key;
+          const opt = document.createElement('option');
+          opt.value = categoria;
+          opt.textContent = categoria;
+          selectCategoria.appendChild(opt);
+
+          // resumo
+          const container = document.createElement('div');
+          container.innerHTML = `<strong style="color:#D4AF37">${categoria}:</strong>`;
+          const ul = document.createElement('ul');
+          ul.style.marginTop = '0.5rem';
+
+          const itensRef = ref(db, `checklist/${categoria}/itens`);
+          onValue(itensRef, snap => {
+            ul.innerHTML = '';
+            snap.forEach(item => {
+              const li = document.createElement('li');
+              li.textContent = item.val().texto + (item.val().marcado ? ' ✅' : '');
+              ul.appendChild(li);
+            });
+          });
+
+          container.appendChild(ul);
+          resumoChecklist.appendChild(container);
+        });
+      });
+    }
+
+    function adicionarItem() {
+      const texto = novoItem.value.trim();
+      const categoria = selectCategoria.value;
+      if (!texto || !categoria) return;
+      const itemRef = push(ref(db, `checklist/${categoria}/itens`));
+      set(itemRef, { texto, marcado: false });
+      novoItem.value = '';
+    }
+
+    function carregarItens() {
+      const categoria = selectCategoria.value;
+      if (!categoria) return;
+      const itensRef = ref(db, `checklist/${categoria}/itens`);
+      onValue(itensRef, snapshot => {
+        itensChecklist.innerHTML = '';
+        snapshot.forEach(item => {
+          const dados = item.val();
+          const div = document.createElement('div');
+          div.className = 'item' + (dados.marcado ? ' done' : '');
+          div.innerHTML = `
+            <span>${dados.texto}</span>
+            <div>
+              <button onclick="alternar('${categoria}', '${item.key}', ${!dados.marcado})">✓</button>
+              <button onclick="excluir('${categoria}', '${item.key}')">✕</button>
+            </div>`;
+          itensChecklist.appendChild(div);
+        });
+      });
+    }
+
+    window.criarCategoria = criarCategoria;
+    window.adicionarItem = adicionarItem;
+    window.carregarItens = carregarItens;
+    window.alternar = (cat, key, marcado) => {
+      update(ref(db, `checklist/${cat}/itens/${key}`), { marcado });
+    };
+    window.excluir = (cat, key) => {
+      remove(ref(db, `checklist/${cat}/itens/${key}`));
+    };
+
+    carregarCategorias();
+  </script>
+</body>
