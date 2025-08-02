@@ -2,103 +2,16 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Checklist Compartilhada</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f2f4f8;
-      color: #333;
-      padding: 20px;
-      max-width: 600px;
-      margin: auto;
-    }
-
-    h1 {
-      text-align: center;
-      color: #1e3d59;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #ccc;
-    }
-
-    li input[type="checkbox"] {
-      margin-right: 10px;
-    }
-
-    input[type="text"] {
-      width: 70%;
-      padding: 8px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-    }
-
-    button {
-      background-color: #1e3d59;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #35607c;
-    }
-
-    .item-text {
-      flex: 1;
-      margin-left: 10px;
-    }
-
-    .remove-button {
-      margin-left: 10px;
-      background: none;
-      border: none;
-      color: red;
-      cursor: pointer;
-      font-size: 16px;
-    }
-  </style>
-</head>
-<body>
-
-  <h1>Checklist Compartilhada</h1>
-
-  <ul id="checklist"></ul>
-
-  <div style="margin-top: 20px;">
-    <input type="text" id="novoItem" placeholder="Digite um novo item..." />
-    <button onclick="adicionarItem()">Adicionar</button>
-  </div>
-
+  <title>Checklist Colaborativo</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      push,
-      onValue,
-      update,
-      remove
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // Configuração do Firebase do seu app
     const firebaseConfig = {
       apiKey: "AIzaSyDiL8tFU_tJuFcwEQY4SpKu8RwIqwRWhHY",
       authDomain: "checklist-aniversario.firebaseapp.com",
       projectId: "checklist-aniversario",
-      storageBucket: "checklist-aniversario.firebasestorage.app",
+      storageBucket: "checklist-aniversario.appspot.com",
       messagingSenderId: "790039618075",
       appId: "1:790039618075:web:938c044193d546afabcebe",
       databaseURL: "https://checklist-aniversario-default-rtdb.firebaseio.com"
@@ -108,52 +21,171 @@
     const db = getDatabase(app);
     const checklistRef = ref(db, 'checklist');
 
-    // Adicionar novo item
-    window.adicionarItem = () => {
-      const input = document.getElementById('novoItem');
-      const texto = input.value.trim();
-      if (texto) {
-        push(checklistRef, { texto, marcado: false });
-        input.value = '';
+    const categoriaSelect = document.getElementById("categoria");
+    const novaCategoriaInput = document.getElementById("novaCategoria");
+    const novoItemInput = document.getElementById("novoItem");
+    const lista = document.getElementById("lista");
+
+    function carregarCategorias() {
+      onValue(checklistRef, (snapshot) => {
+        const categorias = snapshot.val() || {};
+        categoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+        Object.keys(categorias).forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat;
+          option.textContent = cat;
+          categoriaSelect.appendChild(option);
+        });
+      });
+    }
+
+    function carregarItens(categoria) {
+      if (!categoria) {
+        lista.innerHTML = '<p>Selecione uma categoria</p>';
+        return;
       }
+      const catRef = ref(db, `checklist/${categoria}`);
+      onValue(catRef, snapshot => {
+        const dados = snapshot.val() || {};
+        lista.innerHTML = "";
+        Object.entries(dados).forEach(([chave, valor]) => {
+          if (chave === "createdAt") return;
+          const div = document.createElement("div");
+          div.innerHTML = `
+            <label>
+              <input type="checkbox" ${valor.marcado ? "checked" : ""} data-cat="${categoria}" data-id="${chave}">
+              ${valor.texto}
+              <button data-remove="${chave}" data-cat="${categoria}">❌</button>
+            </label>
+          `;
+          lista.appendChild(div);
+        });
+      });
+    }
+
+    categoriaSelect.addEventListener("change", () => {
+      carregarItens(categoriaSelect.value);
+    });
+
+    window.adicionarCategoria = () => {
+      const nome = novaCategoriaInput.value.trim();
+      if (!nome) return;
+      const catRef = ref(db, `checklist/${nome}`);
+      set(catRef, { createdAt: Date.now() });
+      novaCategoriaInput.value = "";
     };
 
-    // Atualização em tempo real
-    onValue(checklistRef, (snapshot) => {
-      const lista = document.getElementById('checklist');
-      lista.innerHTML = '';
-      snapshot.forEach((child) => {
-        const item = child.val();
-        const key = child.key;
+    window.adicionarItem = () => {
+      const texto = novoItemInput.value.trim();
+      const categoria = categoriaSelect.value;
+      if (!texto || !categoria) return;
+      const itensRef = ref(db, `checklist/${categoria}`);
+      push(itensRef, { texto, marcado: false });
+      novoItemInput.value = "";
+    };
 
-        const li = document.createElement('li');
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = item.marcado;
-        checkbox.onchange = () => {
-          update(ref(db, `checklist/${key}`), { marcado: checkbox.checked });
-        };
-
-        const span = document.createElement('span');
-        span.textContent = item.texto;
-        span.className = 'item-text';
-
-        const btnRemove = document.createElement('button');
-        btnRemove.textContent = '❌';
-        btnRemove.className = 'remove-button';
-        btnRemove.onclick = () => {
-          remove(ref(db, `checklist/${key}`));
-        };
-
-        li.appendChild(checkbox);
-        li.appendChild(span);
-        li.appendChild(btnRemove);
-
-        lista.appendChild(li);
-      });
+    lista.addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const categoria = e.target.dataset.cat;
+        const id = e.target.dataset.id;
+        const marcado = e.target.checked;
+        update(ref(db, `checklist/${categoria}/${id}`), { marcado });
+      }
     });
+
+    lista.addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        const categoria = e.target.dataset.cat;
+        const id = e.target.dataset.remove;
+        remove(ref(db, `checklist/${categoria}/${id}`));
+      }
+    });
+
+    carregarCategorias();
   </script>
 
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 2rem;
+      background: #f4f7fa;
+    }
+
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+
+    .card {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ccc;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    input[type="text"] {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    select, button {
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    #lista {
+      margin-top: 1rem;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    [data-remove] {
+      background: #dc3545;
+      margin-left: 10px;
+    }
+
+    [data-remove]:hover {
+      background: #a71d2a;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Checklist Colaborativo 🔥</h1>
+  <div class="card">
+    <input type="text" id="novaCategoria" placeholder="Nova categoria (Ex: música, fotos...)">
+    <button onclick="adicionarCategoria()">Criar Categoria</button>
+
+    <hr>
+    <select id="categoria">
+      <option value="">Carregando categorias...</option>
+    </select>
+
+    <input type="text" id="novoItem" placeholder="Novo item nesta categoria">
+    <button onclick="adicionarItem()">Adicionar Item</button>
+
+    <div id="lista"></div>
+  </div>
 </body>
 </html>
