@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Check-list do Aniversário</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase -->
   <script type="module">
@@ -27,14 +27,17 @@
     const categoriasContainer = document.getElementById("categorias");
     const novaCategoriaInput = document.getElementById("novaCategoria");
     const novoItemInput = document.getElementById("novoItem");
-    const novaItemBtn = document.getElementById("addItemBtn");
+    const addItemBtn = document.getElementById("addItemBtn");
     let categoriaSelecionada = null;
 
-    function criarBotaoCategoria(nome) {
+    function criarCategoria(nome) {
       const div = document.createElement("div");
-      div.className = "categoria-box";
-      div.innerHTML = `<button class="categoria-btn">${nome}</button><div class="itens" id="itens-${nome}"></div>`;
-      div.querySelector("button").addEventListener("click", () => toggleItens(nome));
+      div.className = "categoria";
+      div.innerHTML = `
+        <button class="categoria-btn">${nome}</button>
+        <div class="itens" id="itens-${nome}"></div>
+      `;
+      div.querySelector(".categoria-btn").addEventListener("click", () => toggleItens(nome));
       categoriasContainer.appendChild(div);
     }
 
@@ -53,9 +56,8 @@
       onValue(checklistRef, (snapshot) => {
         const categorias = snapshot.val() || {};
         categoriasContainer.innerHTML = "";
-        Object.keys(categorias).forEach(cat => {
-          criarBotaoCategoria(cat);
-        });
+        Object.keys(categorias).forEach(cat => criarCategoria(cat));
+        categoriasContainer.appendChild(document.getElementById("adicionarCategoriaBox"));
       });
     }
 
@@ -88,7 +90,7 @@
       novaCategoriaInput.value = "";
     };
 
-    novaItemBtn.addEventListener("click", () => {
+    addItemBtn.addEventListener("click", () => {
       const texto = novoItemInput.value.trim();
       if (!texto || !categoriaSelecionada) return;
       const itensRef = ref(db, `checklist/${categoriaSelecionada}`);
@@ -116,135 +118,128 @@
     carregarCategorias();
   </script>
 
-  <!-- Estilo -->
+  <!-- Estilo azul & dourado -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Marcellus+SC&display=swap');
 
     body {
       font-family: 'Marcellus SC', serif;
+      background: linear-gradient(to top, #001f3f, #003366);
+      color: #f5f5f5;
       margin: 0;
-      background: linear-gradient(to top right, #240046, #5f0a87);
-      color: #fff;
       padding: 1rem;
     }
 
     h1 {
       text-align: center;
-      font-size: 2em;
-      margin: 1rem 0;
-      text-shadow: 0 0 10px #ffdd00, 0 0 20px #ffaa00;
-      animation: pulse 3s infinite;
+      color: #ffd700;
+      font-size: 2.2rem;
+      text-shadow: 0 0 10px #fff3, 0 0 20px #ffd700;
+      margin-bottom: 1.5rem;
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 1rem;
-      border-radius: 16px;
-      box-shadow: 0 0 15px rgba(255,255,255,0.1);
       max-width: 500px;
       margin: auto;
-      backdrop-filter: blur(6px);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
     }
 
-    input[type="text"], button {
-      width: 100%;
-      padding: 0.7rem;
-      margin-top: 0.5rem;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-
-    input[type="text"] {
-      background: #fff;
-      color: #333;
-    }
-
-    button {
-      background: #ffc107;
-      color: #000;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #ff9800;
-    }
-
-    .categoria-box {
-      margin-top: 1rem;
-      border: 1px solid rgba(255,255,255,0.2);
+    .categoria {
+      margin-bottom: 1rem;
+      border: 1px solid #ffd70033;
       border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
       padding: 0.5rem;
-      background-color: rgba(255,255,255,0.05);
     }
 
     .categoria-btn {
       width: 100%;
-      background: #007bff;
-      color: #fff;
-      font-weight: bold;
+      background: #003366;
+      color: #ffd700;
+      font-size: 1.2rem;
       border: none;
-      padding: 0.6rem;
+      padding: 0.7rem;
       border-radius: 8px;
+      text-align: left;
     }
 
     .categoria-btn:hover {
-      background: #0056b3;
+      background: #002244;
     }
 
     .itens {
-      margin-top: 0.5rem;
       display: none;
+      margin-top: 0.5rem;
     }
 
     .item {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       padding: 0.5rem;
-      margin-bottom: 0.5rem;
       border-radius: 8px;
+      margin-bottom: 0.5rem;
     }
 
     label {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 1rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 8px;
+      border: none;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      width: 100%;
+      background: #ffd700;
+      color: #003366;
+      margin-top: 0.5rem;
     }
 
     [data-remove] {
-      background: #dc3545;
-      color: white;
+      background: #ff4444;
+      color: #fff;
       border: none;
       padding: 0.3rem 0.6rem;
       border-radius: 6px;
-      margin-left: 10px;
     }
 
     [data-remove]:hover {
-      background: #a71d2a;
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        text-shadow: 0 0 10px #ffdd00, 0 0 20px #ffaa00;
-      }
-      50% {
-        text-shadow: 0 0 20px #ffffff, 0 0 30px #ffcc00;
-      }
+      background: #cc0000;
     }
   </style>
 </head>
 
 <body>
-  <h1>🎂 Check-list do Aniversário 🎉</h1>
+  <h1>🎂 Check-list do Aniversário</h1>
   <div class="card">
-    <input type="text" id="novaCategoria" placeholder="Nova categoria (ex: comidas, fotos...)">
-    <button onclick="adicionarCategoria()">Criar Categoria</button>
-
-    <input type="text" id="novoItem" placeholder="Novo item para categoria selecionada">
-    <button id="addItemBtn">Adicionar Item</button>
-
     <div id="categorias"></div>
+
+    <div id="adicionarCategoriaBox" class="categoria">
+      <input type="text" id="novaCategoria" placeholder="Nome da nova categoria...">
+      <button class="add-btn" onclick="adicionarCategoria()">+ Adicionar Categoria</button>
+
+      <input type="text" id="novoItem" placeholder="Item para categoria selecionada...">
+      <button class="add-btn" id="addItemBtn">+ Adicionar Item</button>
+    </div>
   </div>
 </body>
 </html>
