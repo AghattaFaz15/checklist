@@ -3,18 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>Check-list do Aniversário</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      set,
-      push,
-      onValue,
-      remove,
-      update
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDiL8tFU_tJuFcwEQY4SpKu8RwIqwRWhHY",
@@ -30,74 +22,73 @@
     const db = getDatabase(app);
     const checklistRef = ref(db, 'checklist');
 
-    const categoriasContainer = document.getElementById("categorias");
+    const listaCategorias = document.getElementById("categorias");
+    const novaCategoriaInput = document.getElementById("novaCategoria");
 
     function carregarCategorias() {
       onValue(checklistRef, (snapshot) => {
         const categorias = snapshot.val() || {};
-        categoriasContainer.innerHTML = "";
-
-        Object.entries(categorias).forEach(([cat, dados], index) => {
-          if (cat === "createdAt") return;
+        listaCategorias.innerHTML = "";
+        Object.keys(categorias).forEach((cat, index) => {
           const div = document.createElement("div");
           div.className = "categoria";
+
           div.innerHTML = `
-            <div class="categoria-header" onclick="abrirCategoria('${cat}', this)">
-              <span>Categoria ${index + 1}: ${cat}</span>
-              <span class="seta">➤</span>
-            </div>
-            <div class="itens" style="display:none" id="itens-${cat}">
-              <div class="add-item">
-                <input type="text" id="input-${cat}" placeholder="Novo item...">
-                <button onclick="adicionarItem('${cat}')">Adicionar</button>
+            <div class="categoria-header">
+              <span onclick="abrirCategoria('${cat}', this.parentNode)">
+                Categoria ${index + 1}: ${cat}
+              </span>
+              <div class="botoes-header">
+                <span class="seta" onclick="abrirCategoria('${cat}', this.parentNode.parentNode)">➤</span>
+                <button class="excluir" onclick="removerCategoria('${cat}')">🗑️</button>
               </div>
-              <div class="lista" id="lista-${cat}"></div>
             </div>
+            <div class="itens-container" id="itens-${cat}" style="display: none;"></div>
           `;
-          categoriasContainer.appendChild(div);
+          listaCategorias.appendChild(div);
         });
       });
     }
 
-    window.abrirCategoria = (cat, headerEl) => {
-      const container = document.getElementById(`itens-${cat}`);
-      const visible = container.style.display === "block";
-      container.style.display = visible ? "none" : "block";
-      headerEl.querySelector(".seta").textContent = visible ? "➤" : "▼";
+    window.adicionarCategoria = () => {
+      const nome = novaCategoriaInput.value.trim();
+      if (!nome) return;
+      const catRef = ref(db, `checklist/${nome}`);
+      set(catRef, { createdAt: Date.now() });
+      novaCategoriaInput.value = "";
+    };
 
-      if (!visible) {
-        const lista = document.getElementById(`lista-${cat}`);
+    window.abrirCategoria = (cat, container) => {
+      const itensDiv = document.getElementById(`itens-${cat}`);
+      const aberto = itensDiv.style.display === "block";
+      itensDiv.style.display = aberto ? "none" : "block";
+
+      if (!aberto) {
         const catRef = ref(db, `checklist/${cat}`);
-        onValue(catRef, (snapshot) => {
+        onValue(catRef, snapshot => {
           const dados = snapshot.val() || {};
-          lista.innerHTML = "";
-          Object.entries(dados).forEach(([id, val]) => {
-            if (id === "createdAt") return;
-            const itemDiv = document.createElement("div");
-            itemDiv.className = "item";
-            itemDiv.innerHTML = `
+          itensDiv.innerHTML = `
+            <input type="text" id="novo-${cat}" placeholder="Novo item..." />
+            <button onclick="adicionarItem('${cat}')">+ Adicionar item</button>
+          `;
+          Object.entries(dados).forEach(([chave, valor]) => {
+            if (chave === "createdAt") return;
+            const div = document.createElement("div");
+            div.innerHTML = `
               <label>
-                <input type="checkbox" ${val.marcado ? "checked" : ""} onchange="marcarItem('${cat}', '${id}', this.checked)">
-                ${val.texto}
+                <input type="checkbox" ${valor.marcado ? "checked" : ""} data-cat="${cat}" data-id="${chave}">
+                ${valor.texto}
+                <button data-remove="${chave}" data-cat="${cat}">❌</button>
               </label>
-              <button onclick="removerItem('${cat}', '${id}')">❌</button>
             `;
-            lista.appendChild(itemDiv);
+            itensDiv.appendChild(div);
           });
         });
       }
     };
 
-    window.adicionarCategoria = () => {
-      const nome = document.getElementById("novaCategoria").value.trim();
-      if (!nome) return;
-      const catRef = ref(db, `checklist/${nome}`);
-      set(catRef, { createdAt: Date.now() });
-      document.getElementById("novaCategoria").value = "";
-    };
-
     window.adicionarItem = (cat) => {
-      const input = document.getElementById(`input-${cat}`);
+      const input = document.getElementById(`novo-${cat}`);
       const texto = input.value.trim();
       if (!texto) return;
       const itensRef = ref(db, `checklist/${cat}`);
@@ -105,13 +96,28 @@
       input.value = "";
     };
 
-    window.marcarItem = (cat, id, marcado) => {
-      update(ref(db, `checklist/${cat}/${id}`), { marcado });
+    window.removerCategoria = (cat) => {
+      if (confirm(`Tem certeza que deseja excluir a categoria "${cat}"?`)) {
+        remove(ref(db, `checklist/${cat}`));
+      }
     };
 
-    window.removerItem = (cat, id) => {
-      remove(ref(db, `checklist/${cat}/${id}`));
-    };
+    document.addEventListener("change", (e) => {
+      if (e.target.type === "checkbox") {
+        const categoria = e.target.dataset.cat;
+        const id = e.target.dataset.id;
+        const marcado = e.target.checked;
+        update(ref(db, `checklist/${categoria}/${id}`), { marcado });
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON" && e.target.dataset.remove) {
+        const categoria = e.target.dataset.cat;
+        const id = e.target.dataset.remove;
+        remove(ref(db, `checklist/${categoria}/${id}`));
+      }
+    });
 
     carregarCategorias();
   </script>
@@ -119,110 +125,111 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to bottom, #003366, #001f3f);
-      color: #fff;
-      min-height: 100vh;
+      background: linear-gradient(to bottom, #001f3f, #003366);
+      color: gold;
+      padding: 2rem;
     }
 
     h1 {
       text-align: center;
-      padding: 1rem;
-      background: #001c33;
       color: gold;
-      font-size: 1.8rem;
-      margin: 0;
-    }
-
-    .card {
-      background: #ffffff10;
-      border-radius: 12px;
-      padding: 1rem;
-      margin: 1rem;
-      box-shadow: 0 0 10px #0008;
+      margin-bottom: 1rem;
     }
 
     .add-categoria {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 1rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
     }
 
     input[type="text"] {
-      flex: 1;
       padding: 0.5rem;
+      border-radius: 6px;
       border: none;
-      border-radius: 8px;
+      width: 60%;
     }
 
     button {
       background: gold;
-      color: #001c33;
+      color: #003366;
       border: none;
+      border-radius: 6px;
       padding: 0.5rem 1rem;
-      border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
     }
 
     button:hover {
-      background: #ffd700cc;
+      background: #ffd700;
     }
 
     .categoria {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid gold;
+      border-radius: 12px;
+      padding: 1rem;
       margin-bottom: 1rem;
-      border: 1px solid gold;
-      border-radius: 10px;
     }
 
     .categoria-header {
-      background: #002b5c;
-      padding: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       cursor: pointer;
-      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .botoes-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      border-radius: 10px 10px 0 0;
-    }
-
-    .itens {
-      padding: 0.7rem;
-      background: #001c33;
-      border-top: 1px solid gold;
-      border-radius: 0 0 10px 10px;
-    }
-
-    .add-item {
-      display: flex;
       gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.3rem 0;
     }
 
     .seta {
       font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .excluir {
+      background: transparent;
+      color: gold;
+      font-size: 1.2rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .excluir:hover {
+      color: red;
+      transform: scale(1.2);
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      margin-top: 0.5rem;
+    }
+
+    .itens-container input[type="text"] {
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .itens-container button {
+      margin-top: 0.5rem;
     }
   </style>
 </head>
-
 <body>
   <h1>Check-list do Aniversário 🎉</h1>
 
-  <div class="card">
-    <div class="add-categoria">
-      <input type="text" id="novaCategoria" placeholder="Nome da nova categoria...">
-      <button onclick="adicionarCategoria()">+ Adicionar Categoria</button>
-    </div>
+  <div class="add-categoria">
+    <input type="text" id="novaCategoria" placeholder="Nova categoria...">
+    <button onclick="adicionarCategoria()">+ Adicionar Categoria</button>
   </div>
 
-  <div id="categorias" class="card"></div>
+  <div id="categorias"></div>
 </body>
 </html>
