@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Fera do Espírito Santo</title>
+  <title>Check-list do Aniversário</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Firebase -->
@@ -24,36 +24,50 @@
     const db = getDatabase(app);
     const checklistRef = ref(db, 'checklist');
 
-    const categoriaSelect = document.getElementById("categoria");
+    const categoriasContainer = document.getElementById("categorias");
     const novaCategoriaInput = document.getElementById("novaCategoria");
     const novoItemInput = document.getElementById("novoItem");
-    const lista = document.getElementById("lista");
+    const novaItemBtn = document.getElementById("addItemBtn");
+    let categoriaSelecionada = null;
+
+    function criarBotaoCategoria(nome) {
+      const div = document.createElement("div");
+      div.className = "categoria-box";
+      div.innerHTML = `<button class="categoria-btn">${nome}</button><div class="itens" id="itens-${nome}"></div>`;
+      div.querySelector("button").addEventListener("click", () => toggleItens(nome));
+      categoriasContainer.appendChild(div);
+    }
+
+    function toggleItens(categoria) {
+      const itensDiv = document.getElementById(`itens-${categoria}`);
+      const visivel = itensDiv.style.display === "block";
+      itensDiv.style.display = visivel ? "none" : "block";
+
+      if (!visivel) {
+        carregarItens(categoria, itensDiv);
+        categoriaSelecionada = categoria;
+      }
+    }
 
     function carregarCategorias() {
       onValue(checklistRef, (snapshot) => {
         const categorias = snapshot.val() || {};
-        categoriaSelect.innerHTML = '<option value="">Selecione uma categoria</option>';
+        categoriasContainer.innerHTML = "";
         Object.keys(categorias).forEach(cat => {
-          const option = document.createElement("option");
-          option.value = cat;
-          option.textContent = cat;
-          categoriaSelect.appendChild(option);
+          criarBotaoCategoria(cat);
         });
       });
     }
 
-    function carregarItens(categoria) {
-      if (!categoria) {
-        lista.innerHTML = '<p>Selecione uma categoria</p>';
-        return;
-      }
+    function carregarItens(categoria, container) {
       const catRef = ref(db, `checklist/${categoria}`);
       onValue(catRef, snapshot => {
         const dados = snapshot.val() || {};
-        lista.innerHTML = "";
+        container.innerHTML = "";
         Object.entries(dados).forEach(([chave, valor]) => {
           if (chave === "createdAt") return;
           const div = document.createElement("div");
+          div.className = "item";
           div.innerHTML = `
             <label>
               <input type="checkbox" ${valor.marcado ? "checked" : ""} data-cat="${categoria}" data-id="${chave}">
@@ -61,14 +75,10 @@
               <button data-remove="${chave}" data-cat="${categoria}">❌</button>
             </label>
           `;
-          lista.appendChild(div);
+          container.appendChild(div);
         });
       });
     }
-
-    categoriaSelect.addEventListener("change", () => {
-      carregarItens(categoriaSelect.value);
-    });
 
     window.adicionarCategoria = () => {
       const nome = novaCategoriaInput.value.trim();
@@ -78,16 +88,15 @@
       novaCategoriaInput.value = "";
     };
 
-    window.adicionarItem = () => {
+    novaItemBtn.addEventListener("click", () => {
       const texto = novoItemInput.value.trim();
-      const categoria = categoriaSelect.value;
-      if (!texto || !categoria) return;
-      const itensRef = ref(db, `checklist/${categoria}`);
+      if (!texto || !categoriaSelecionada) return;
+      const itensRef = ref(db, `checklist/${categoriaSelecionada}`);
       push(itensRef, { texto, marcado: false });
       novoItemInput.value = "";
-    };
+    });
 
-    lista.addEventListener("change", (e) => {
+    categoriasContainer.addEventListener("change", (e) => {
       if (e.target.type === "checkbox") {
         const categoria = e.target.dataset.cat;
         const id = e.target.dataset.id;
@@ -96,8 +105,8 @@
       }
     });
 
-    lista.addEventListener("click", (e) => {
-      if (e.target.tagName === "BUTTON") {
+    categoriasContainer.addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON" && e.target.dataset.remove) {
         const categoria = e.target.dataset.cat;
         const id = e.target.dataset.remove;
         remove(ref(db, `checklist/${categoria}/${id}`));
@@ -107,14 +116,14 @@
     carregarCategorias();
   </script>
 
-  <!-- Estilo Inspirado -->
+  <!-- Estilo -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Marcellus+SC&display=swap');
 
     body {
       font-family: 'Marcellus SC', serif;
       margin: 0;
-      background: linear-gradient(to top right, #1c0036, #4b006e);
+      background: linear-gradient(to top right, #240046, #5f0a87);
       color: #fff;
       padding: 1rem;
     }
@@ -122,7 +131,7 @@
     h1 {
       text-align: center;
       font-size: 2em;
-      margin-top: 1rem;
+      margin: 1rem 0;
       text-shadow: 0 0 10px #ffdd00, 0 0 20px #ffaa00;
       animation: pulse 3s infinite;
     }
@@ -132,28 +141,23 @@
       padding: 1rem;
       border-radius: 16px;
       box-shadow: 0 0 15px rgba(255,255,255,0.1);
-      max-width: 450px;
-      margin: 2rem auto;
+      max-width: 500px;
+      margin: auto;
       backdrop-filter: blur(6px);
     }
 
-    input[type="text"], select, button {
+    input[type="text"], button {
       width: 100%;
       padding: 0.7rem;
       margin-top: 0.5rem;
       border: none;
       border-radius: 10px;
-      box-sizing: border-box;
       font-size: 1rem;
+      box-sizing: border-box;
     }
 
     input[type="text"] {
       background: #fff;
-      color: #333;
-    }
-
-    select {
-      background: #ffffff;
       color: #333;
     }
 
@@ -167,30 +171,57 @@
       background: #ff9800;
     }
 
-    #lista {
+    .categoria-box {
       margin-top: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 0.5rem;
+      background-color: rgba(255,255,255,0.05);
+    }
+
+    .categoria-btn {
+      width: 100%;
+      background: #007bff;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      padding: 0.6rem;
+      border-radius: 8px;
+    }
+
+    .categoria-btn:hover {
+      background: #0056b3;
+    }
+
+    .itens {
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
     }
 
     label {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 0.5rem;
-      border-radius: 8px;
-      margin-bottom: 0.5rem;
     }
 
     [data-remove] {
-      background: #ff4444;
-      border: none;
+      background: #dc3545;
       color: white;
+      border: none;
       padding: 0.3rem 0.6rem;
       border-radius: 6px;
+      margin-left: 10px;
     }
 
     [data-remove]:hover {
-      background: #cc0000;
+      background: #a71d2a;
     }
 
     @keyframes pulse {
@@ -205,21 +236,15 @@
 </head>
 
 <body>
-  <h1>🔥 Fera do Espírito Santo 🔥</h1>
+  <h1>🎂 Check-list do Aniversário 🎉</h1>
   <div class="card">
-    <input type="text" id="novaCategoria" placeholder="Nova categoria (Ex: música, fotos...)">
+    <input type="text" id="novaCategoria" placeholder="Nova categoria (ex: comidas, fotos...)">
     <button onclick="adicionarCategoria()">Criar Categoria</button>
 
-    <hr style="border: 1px solid #fff3;">
+    <input type="text" id="novoItem" placeholder="Novo item para categoria selecionada">
+    <button id="addItemBtn">Adicionar Item</button>
 
-    <select id="categoria">
-      <option value="">Carregando categorias...</option>
-    </select>
-
-    <input type="text" id="novoItem" placeholder="Novo item nesta categoria">
-    <button onclick="adicionarItem()">Adicionar Item</button>
-
-    <div id="lista"></div>
+    <div id="categorias"></div>
   </div>
 </body>
 </html>
